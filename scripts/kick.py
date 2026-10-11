@@ -1,5 +1,5 @@
 # scripts/kick.py — يجلب بيانات Kick بتقنية تشبه متصفح Chrome (curl_cffi) ويرسلها لموقعك
-import json, os, sys, urllib.parse
+import json, os, re, sys, urllib.parse
 from curl_cffi import requests
 
 C = os.environ.get("KICK_CHANNEL", "dinfil3")
@@ -26,7 +26,7 @@ def dur(v):
     return "%dس %dد" % (m // 60, m % 60) if m else ""
 
 out = {"ok": False, "channel": C, "live": False, "viewers": "", "followers": "",
-       "gifters": {}, "clips": [], "archives": [], "errors": []}
+       "gifters": {}, "clips": [], "archives": [], "errors": [], "debug": {}}
 
 def step(name, fn):
     try:
@@ -44,14 +44,28 @@ def channel():
 
 def gifters():
     j = get("/leaderboards")
-    m = lambda a: [{"n": x.get("username"), "v": str(x.get("quantity"))} for x in (a or [])[:10]]
-    out["gifters"] = {"w": m(j.get("gifts_week")), "m": m(j.get("gifts_month")), "a": m(j.get("gifts"))}
+    out["debug"]["leaderboards"] = {k: (len(v) if isinstance(v, list) else str(type(v).__name__)) for k, v in j.items()} if isinstance(j, dict) else str(type(j).__name__)
+    def amt(x):
+        for k in ("quantity", "gifted_amount", "total", "amount", "kicks", "value"):
+            if x.get(k) is not None:
+                return str(x[k])
+        return ""
+    g = {"w": [], "m": [], "a": []}
+    for k, v in (j.items() if isinstance(j, dict) else []):
+        if isinstance(v, list) and v and isinstance(v[0], dict) and v[0].get("username"):
+            slot = "w" if "week" in k else "m" if "month" in k else "a"
+            if not g[slot]:
+                g[slot] = [{"n": x.get("username"), "v": amt(x)} for x in v[:10]]
+    out["gifters"] = g
 
 def clips():
     j = get("/clips?sort=view&time=all")
     a = j.get("clips") or j.get("data") or (j if isinstance(j, list) else [])
+    def cid(x):
+        m = re.search(r"(clip_[0-9A-Za-z]+)", str(x.get("clip_url") or ""))
+        return x.get("id") or (m.group(1) if m else "")
     out["clips"] = [{"t": x.get("title") or "مقطع",
-                     "u": x.get("clip_url") or "https://kick.com/%s/clips/%s" % (C, x.get("id")),
+                     "u": "https://kick.com/%s/clips/%s" % (C, cid(x)),
                      "v": str(x.get("view_count", x.get("views", 0)))} for x in a[:12]]
 
 def videos():
@@ -59,6 +73,7 @@ def videos():
         j = get("/videos")
     except Exception:
         j = get("/videos/latest")
+    out["debug"]["videos"] = ("list:%d" % len(j)) if isinstance(j, list) else (list(j.keys()) if isinstance(j, dict) else str(type(j).__name__))
     a = j if isinstance(j, list) else (j.get("data") or j.get("videos") or [])
     for x in a[:12]:
         ls = x.get("livestream") or {}

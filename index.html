@@ -111,7 +111,7 @@ function render(){fix(S);const k=encodeURIComponent(S.kick||''),kk='https://kick
  const xs=S.socials.find(s=>/\/\/(www\.)?(x|twitter)\.com/i.test(s.u||'')),fl=S.stats.followers||(ok&&A.followers)||'',fm=n=>{const v=+n;return v>=1e6?(v/1e6).toFixed(1).replace('.0','')+'M':v>=1e3?(v/1e3).toFixed(1).replace('.0','')+'K':n};
  R('xbtn',xs?`<a class="cb g" href="${esc(okUrl(xs.u))}" target="_blank"><svg viewBox="0 0 24 24" width="22" height="22" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>${lb('btn_x')}</a>`:`<a class="cb g" href="${kk}/subscribe" target="_blank">${lb('btn_sub')}</a>`);
  R('hs',`<div class="hs">${fl?`<div><b>${esc(fm(fl))}</b><span>${lb('st_fol')}</span></div>`:''}<div><b>${S.socials.length}</b><span>${lb('st_plat')}</span></div></div>`);
- R('live',ok&&A.live?`<span class="lv">${lb('live_now')}${A.viewers?' · '+esc(A.viewers)+' '+lb('viewers_w'):''}</span>`:'');
+ R('live',ok&&A.live&&A.at&&Date.now()-A.at<2700000?`<span class="lv">${lb('live_now')}${A.viewers?' · '+esc(A.viewers)+' '+lb('viewers_w'):''}</span>`:'');
  R('tip',S.tip?`<a class="btn o" href="${esc(okUrl(S.tip))}" target="_blank">${lb('btn_tip')}</a>`:'');
  const st=[[lb('st_view'),S.stats.viewers],[lb('st_cat'),S.stats.cat],[lb('st_ys'),S.yt.subs],[lb('st_yv'),S.yt.videos],[lb('st_yw'),S.yt.views]].filter(x=>x[1]);
  R('stats',st.map(x=>`<div class="card"><b>${esc(x[1])}</b><span>${x[0]}</span></div>`).join(''));

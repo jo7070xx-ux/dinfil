@@ -1,0 +1,28 @@
+name: kick-chat
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "تجربة: شغّل X دقيقة حتى لو ما فيه بث (اتركه 0 للوضع العادي)"
+        default: "0"
+concurrency:
+  group: kick-chat
+  cancel-in-progress: false
+jobs:
+  listen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install curl_cffi
+      - run: python scripts/chat.py
+        env:
+          KICK_CHANNEL: dinfil3
+          SITE_URL: ${{ secrets.SITE_URL }}
+          PUSH_KEY: ${{ secrets.PUSH_KEY }}
+          MINUTES: ${{ inputs.minutes }}

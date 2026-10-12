@@ -23,7 +23,7 @@ def push(payload):
         return False
     r = requests.post(SITE + "/api/chat", json=payload, headers={"x-key": KEY}, timeout=60)
     if r.status_code != 200:
-        print("POST failed", r.status_code, r.text[:200])
+        print("POST failed", r.status_code, SITE + "/api/chat", r.text[:120].replace("\n", " "))
     return r.status_code == 200
 
 def load_users():
@@ -44,17 +44,52 @@ def avatar(slug):
             pass
     return ""
 
-def messages(cid):
-    j = get(API + "%s/messages" % cid)
+def parse(j):
     d = j.get("data", j) if isinstance(j, dict) else j
     a = d.get("messages") if isinstance(d, dict) else d
-    return j, [m for m in (a or []) if isinstance(m, dict)]
+    return [m for m in (a or []) if isinstance(m, dict)] if isinstance(a, list) else []
+
+cur, polls = 0, 0
+def messages():
+    global cur, polls
+    polls += 1
+    order = [cur] + ([i for i in range(len(CANDS)) if i != cur] if polls <= 4 else [])
+    first_j, first_ms = None, []
+    for i in order:
+        try:
+            j = get(CANDS[i])
+            ms = parse(j)
+            dbg.setdefault("urls", {})[CANDS[i].replace("https://kick.com/api/v2/", "")] = len(ms)
+        except Exception as e:
+            dbg.setdefault("urls", {})[CANDS[i].replace("https://kick.com/api/v2/", "")] = str(e)[:40]
+            continue
+        if first_j is None:
+            first_j, first_ms = j, ms
+        if ms:
+            cur = i
+            return j, ms
+    if first_j is None:
+        raise Exception("كل روابط الرسائل فشلت: %s" % dbg.get("urls"))
+    return first_j, first_ms
 
 info = get(API + C)
 cid = info.get("id")
 live = bool(info.get("livestream"))
 users = load_users()
-dbg = {"channel_id": cid, "live": live, "probe": PROBE}
+chat_id = (info.get("chatroom") or {}).get("id")
+CANDS = [API + "%s/messages" % cid] + ([API + "%s/messages" % chat_id, "https://kick.com/api/v2/chatrooms/%s/messages" % chat_id] if chat_id else [])
+dbg = {"channel_id": cid, "chatroom_id": chat_id, "live": live, "probe": PROBE}
+# فحص سريع: هل صفحة الإرسال موجودة في موقعك؟
+try:
+    hc = requests.get(SITE + "/api/chat?ping=1", timeout=30)
+    print("فحص", SITE + "/api/chat", "→", hc.status_code)
+    if hc.status_code == 404:
+        print("الصفحة /api/chat غير موجودة في موقعك — تأكد من وجود api/chat.js في GitHub وإن نشر Vercel Ready")
+        sys.exit(1)
+except SystemExit:
+    raise
+except Exception as e:
+    print("تعذّر فحص الموقع:", e)
 if not (live or PROBE):
     print("القناة ليست في بث — لا شيء للعدّ")
     sys.exit(0)
@@ -75,10 +110,10 @@ t0 = last_save = last_live = time.time()
 off_since = None
 while True:
     try:
-        j, ms = messages(cid)
+        j, ms = messages()
         if first:
             dbg["shape"] = {"keys": list(j.keys())[:8] if isinstance(j, dict) else "list", "count": len(ms),
-                            "sample": sorted(ms[0].keys())[:12] if ms else []}
+                            "sample": sorted(ms[0].keys())[:12] if ms else [], "raw": json.dumps(j, ensure_ascii=False)[:400]}
             print("أول طلب نجح:", json.dumps(dbg["shape"], ensure_ascii=False))
         fails = 0
         for m in ms:

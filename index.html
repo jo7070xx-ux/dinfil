@@ -50,6 +50,7 @@ h2{font-size:22px;margin:38px 0 14px;border-right:4px solid var(--red);padding-r
 .hs{display:flex;max-width:960px;margin:26px auto 0;border:1px solid color-mix(in srgb,var(--red) 40%,transparent);border-radius:22px;background:linear-gradient(#2a0408,#0a0102);overflow:hidden}
 .hs>div{flex:1;padding:22px 10px;text-align:center}.hs>div+div{border-right:1px solid color-mix(in srgb,var(--red) 25%,transparent)}
 .hs b{display:block;font-size:clamp(30px,6vw,46px);font-weight:900}.hs span{color:#b36a70;font-size:13px}
+.us{display:flex;align-items:center;gap:10px}.av{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#2a0a0e;display:inline-grid;place-items:center;font-weight:900;color:#ff9aa2;flex:none}
 .msg{color:var(--mu);font-size:14px}
 footer{text-align:center;color:var(--mu);padding:40px 5%;border-top:1px solid var(--line);margin-top:40px;font-size:14px}
 input{width:100%;background:#000;border:1px solid var(--line);border-radius:8px;color:var(--tx);padding:9px 12px;font-family:inherit;font-size:14px}
@@ -89,7 +90,7 @@ const $=i=>document.getElementById(i),Q=(s,f)=>document.querySelectorAll(s).forE
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const okImg=s=>typeof s==='string'&&(s.startsWith('data:image/')||s.startsWith('https://')),okUrl=u=>/^https?:\/\//.test(u)?u:'#';
 const TG=[{t:'FiveM'},{t:'Roleplay'},{t:'Just Chatting'}],KEY='dinfil_site_v1',T={live:'📺 البث المباشر',chars:'🎭 شخصياتي في FiveM',gal:'🖼️ معرض الصور',gif:'🏆 Top Gifters',reg:'⭐ أكثر المتفاعلين في البثوث',clips:'🎬 أفضل المقاطع',arc:'🗂️ أرشيف البثوث',soc:'🌐 حسابات التواصل'};
-const LB={nv_live:'البث',nv_chars:'الشخصيات',nv_gal:'المعرض',nv_soc:'التواصل',nav_kick:'🔴 Kick',brand_sub:'OFFICIAL',btn_watch:'شاهد البث',btn_x:'تابع على X',btn_sub:'★ اشتراك',btn_tip:'💝 ادعم القناة',btn_chat:'💬 افتح الشات في Kick',btn_clips:'عرض كل المقاطع',st_fol:'متابع كيك',st_plat:'منصة',st_view:'المشاهدون',st_cat:'التصنيف',st_ys:'مشتركو يوتيوب',st_yv:'فيديوهات يوتيوب',st_yw:'مشاهدات يوتيوب',g_w:'📅 الأسبوعي',g_m:'🌙 الشهري',g_a:'👑 طوال الوقت',live_now:'🔴 مباشر الآن',viewers_w:'مشاهد',views_w:'مشاهدة',soon:'قريباً…',none:'لا يوجد بعد',no_gal:'لا توجد صور بعد.'};
+const LB={nv_live:'البث',nv_chars:'الشخصيات',nv_gal:'المعرض',nv_soc:'التواصل',nav_kick:'🔴 Kick',brand_sub:'OFFICIAL',btn_watch:'شاهد البث',btn_x:'تابع على X',btn_sub:'★ اشتراك',btn_tip:'💝 ادعم القناة',btn_chat:'💬 افتح الشات في Kick',btn_clips:'عرض كل المقاطع',st_fol:'متابع كيك',st_plat:'منصة',st_view:'المشاهدون',st_cat:'التصنيف',st_ys:'مشتركو يوتيوب',st_yv:'فيديوهات يوتيوب',st_yw:'مشاهدات يوتيوب',g_w:'📅 الأسبوعي',g_m:'🌙 الشهري',g_a:'👑 طوال الوقت',live_now:'🔴 مباشر الآن',viewers_w:'مشاهد',views_w:'مشاهدة',soon:'قريباً…',none:'لا يوجد بعد',no_gal:'لا توجد صور بعد.',msgs_w:'رسالة'};
 const lb=k=>(S.labels&&S.labels[k])||LB[k],clr=c=>/^#[0-9a-f]{6}$/i.test(c)?c:'#ffffff';
 const rp=(ps,fb)=>ps&&ps.some(p=>p.t)?ps.filter(p=>p.t).map(p=>p.m==='grad'?`<span style="background:linear-gradient(90deg,${clr(p.c1)},${clr(p.c2)},${clr(p.c3)});-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px ${clr(p.c2)}66)">${esc(p.t)}</span>`:`<span style="color:${clr(p.c1)}">${esc(p.t)}</span>`).join(' '):esc(fb);
 function fix(o){if(!o.nameParts)o.nameParts=[{t:o.name||'',m:'grad',c1:'#a30010',c2:'#ff1e2d',c3:'#ffffff'}];if(!o.tagParts)o.tagParts=[{t:o.tag||'',m:'solid',c1:'#9a9aa8'}];if(!o.tags)o.tags=TG.map(x=>({...x}));['stats','yt','titles','hide','gifters','labels'].forEach(k=>o[k]=o[k]||{});['w','m','a'].forEach(k=>o.gifters[k]=o.gifters[k]||[]);['emojis','chars','socials','gallery','regulars','clips','archives'].forEach(k=>o[k]=o[k]||[])}
@@ -118,13 +119,14 @@ function render(){fix(S);const k=encodeURIComponent(S.kick||''),kk='https://kick
  R('chars',L(S.chars,c=>`<div class="card ch">${okImg(c.img)?`<img src="${c.img}" alt="">`:''}<b>${esc(c.n)}</b><em>${esc(c.r)}</em><p>${esc(c.d)}</p></div>`,lb('soon')));
  R('gal',L(S.gallery.filter(g=>okImg(g.img)),g=>`<figure><img src="${g.img}" alt=""><figcaption>${esc(g.n)}</figcaption></figure>`,lb('no_gal')));
  R('gif',[['w',lb('g_w')],['m',lb('g_m')],['a',lb('g_a')]].map(([g,t])=>`<div class="card"><h3>${t}</h3>${L(GL(g),(x,i)=>`<div class="rk"><span>${i+1}. ${esc(x.n)}</span><i>${esc(x.v)}</i></div>`,lb('none'))}</div>`).join(''));
- R('reg',L(S.regulars,(r,i)=>`<div class="rk"><span>${i+1}. ${esc(r.n)}</span><i>Lv.${esc(r.lv)} · ${esc(r.t)}</i></div>`,lb('soon')));
+ R('reg',ok&&A.chat&&A.chat.length?A.chat.map((r,i)=>`<div class="rk"><span class="us">${i+1}. ${r.a&&r.a.startsWith('https://')?`<img class="av" src="${esc(r.a)}" alt="" loading="lazy" onerror="this.outerHTML='<b class=av>${esc((r.n||'?')[0])}</b>'">`:`<b class="av">${esc((r.n||'?')[0])}</b>`}${esc(r.n)}</span><i>${esc(r.c)} ${lb('msgs_w')}</i></div>`).join(''):L(S.regulars,(r,i)=>`<div class="rk"><span>${i+1}. ${esc(r.n)}</span><i>Lv.${esc(r.lv)} · ${esc(r.t)}</i></div>`,lb('soon')));
  R('clips',L(P('clips',S.clips),c=>`<a class="lk" href="${esc(okUrl(c.u))}" target="_blank">${esc(c.t)}<small>${esc(c.v)} ${lb('views_w')}</small></a>`,lb('soon')));
  R('arc',L(P('archives',S.archives),c=>`<a class="lk" href="${esc(okUrl(c.u))}" target="_blank">${esc(c.t)}<small>${esc(c.d)} · ${esc(c.v)} ${lb('views_w')}</small></a>`,lb('soon')));
  R('soc',L(S.socials,s=>`<a href="${esc(okUrl(s.u))}" target="_blank">${esc(s.l)}</a>`,'—'));
 }
 render();
-async function auto(){if(S.auto===false){A=null;render();return}try{const r=await fetch('/api/kick?c='+encodeURIComponent(S.kick||''));A=r.ok?await r.json():null}catch(e){A=null}render()}
+async function auto(){if(S.auto===false){A=null;render();return}let k=null,c=null;const J=async u=>{try{const r=await fetch(u);return r.ok?await r.json():null}catch(e){return null}};
+ [k,c]=await Promise.all([J('/api/kick?c='+encodeURIComponent(S.kick||'')),J('/api/chat')]);A=(k||c)?{...(k||{}),chat:(c&&c.top)||[]}:null;render()}
 auto();
 async function loadRemote(){try{const r=await fetch('/api/site');if(r.ok){const j=await r.json();if(j&&Object.keys(j).length){S={...JSON.parse($('state').textContent),...j};render()}}}catch(e){}document.documentElement.classList.remove('ld')}
 loadRemote();
